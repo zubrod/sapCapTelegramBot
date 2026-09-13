@@ -18,6 +18,16 @@ export class EventService extends cds.ApplicationService {
 
         this.setWebhook()
 
+
+        this.on("getTicketLink", async (req) => {
+
+            const chatId = req.data.chatId
+
+            const user = await SELECT.one.from("TelegramUsers").where({ chatId: chatId.toString() })
+
+            this.sendSingleUpdateToUser(user.chatId, "https://pretix.eu/carousel/20261006-metal-carousel/")
+        })
+
         this.on("sendSingleUpdate", async (req) => {
 
             const chatId = req.data.chatId
@@ -44,9 +54,9 @@ export class EventService extends cds.ApplicationService {
             }
         })
 
-        this.on("subscribeTelegramUser", (req) => this.onSubscribeTelegramUser(req))
+        this.on("subscribeTelegramUser", async (req) => await this.onSubscribeTelegramUser(req))
 
-        this.on('importEvent', (req) => this.onImportEvent(req))
+        this.on('importEvent', async (req) => await this.onImportEvent(req))
 
 
         this.on("eventImported", async msg => {
@@ -56,6 +66,8 @@ export class EventService extends cds.ApplicationService {
 
 
         await this.schedule("importEvent", {}).every('60m')
+
+        return super.init();
     }
 
     async onSubscribeTelegramUser(req) {
@@ -99,11 +111,11 @@ export class EventService extends cds.ApplicationService {
 
         // Event speichern
         const existing = await SELECT.one
-            .from('my.events.Events');
+            .from('Events');
 
 
         if (!existing) {
-            await INSERT.into('my.events.Events').entries({
+            await INSERT.into('Events').entries({
                 ID: eventID,
                 event_title: data.event_title,
                 event_date: data.event_date,
@@ -111,10 +123,10 @@ export class EventService extends cds.ApplicationService {
                 total_tickets: data.total_tickets,
                 shop_link: data.shop_link,
                 fee: data.fee,
-                externalID: EXTERNAL_EVENT_ID
+                //  externalEventID: EXTERNAL_EVENT_ID
             });
         } else if (existing.total_tickets !== data.total_tickets) {
-            await UPDATE('my.events.Events')
+            await UPDATE('Events')
                 .set({
                     event_title: data.event_title,
                     event_date: data.event_date,
@@ -123,7 +135,7 @@ export class EventService extends cds.ApplicationService {
                     shop_link: data.shop_link,
                     fee: data.fee
                 })
-                .where({ externalID: EXTERNAL_EVENT_ID });
+                .where({ externalEventID: EXTERNAL_EVENT_ID });
 
         }
 
@@ -133,7 +145,7 @@ export class EventService extends cds.ApplicationService {
 
         // Event zurückgeben
         return await SELECT.one
-            .from('my.events.Events').where({ externalID: EXTERNAL_EVENT_ID });
+            .from('Events').where();
     }
 
     async setWebhook() {

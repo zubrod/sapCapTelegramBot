@@ -14,6 +14,30 @@ cds.on('bootstrap', (app) => {
                 eventService.send("subscribeTelegramUser", { chatId: chatId })
             }
 
+            if (text.includes("/getticketlink")) {
+                const eventService = await cds.connect.to("EventService")
+                eventService.send("getTicketLink", { chatId: chatId })
+            }
+
+            if (text.includes("/subscribemail")) {
+                const eventService = await cds.connect.to("MailService")
+
+                const parts = text.split(" ");
+
+                if (parts.length !== 2) {
+                    res.sendStatus(200);
+                } else {
+
+                    eventService.send("sendMail", {
+                        to: parts[1],
+                        subject: "Event Update",
+                        text: "Das Event wurde aktualisiert."
+                    })
+                }
+            }
+
+
+
         }
 
         res.sendStatus(200);

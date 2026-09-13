@@ -2,32 +2,29 @@
   "name": "ticketbot",
   "version": "1.0.0",
   "dependencies": {
-    "@sap/cds": "^10"
+    "@sap/cds": "^10",
+    "nodemailer": "^10.0.9"
   },
   "devDependencies": {
     "@cap-js/sqlite": "^3",
-    "cds-plugin-ui5": "^0.17.0",
     "dotenv": "^17.4.2"
   },
   "scripts": {
-    "start": "cds-serve"
+    "start": "cds-serve",
+    "deploy:db": "cds deploy --to sqlite:db/db.sqlite"
   },
   "private": true,
-  "workspaces": [
-    "app/*"
-  ],
   "cds": {
     "requires": {
       "db": {
         "kind": "sqlite",
         "credentials": {
-          "url": "db/my-database.sqlite"
+          "url": "db/db.sqlite"
         }
+      },
+      "messaging": {
+        "kind": "local-messaging"
       }
-    },
-    "server": {
-      "host": "0.0.0.0",
-      "port": 4004
     }
   }
 }
