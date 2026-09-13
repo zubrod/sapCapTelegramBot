@@ -9,32 +9,34 @@ cds.on('bootstrap', (app) => {
         if (update.message) {
             const chatId = update.message.chat.id;
             const text = update.message.text;
-            if (text.includes("/subscribe")) {
-                const eventService = await cds.connect.to("EventService")
-                eventService.send("subscribeTelegramUser", { chatId: chatId })
+
+            if (text === "/start") {
+                const telegramService = await cds.connect.to("TelegramService")
+                telegramService.send("subscribeTelegramUser", { chatId: chatId })
             }
 
-            if (text.includes("/getticketlink")) {
-                const eventService = await cds.connect.to("EventService")
-                eventService.send("getTicketLink", { chatId: chatId })
+            if (text === "/subscribe") {
+                const telegramService = await cds.connect.to("TelegramService")
+                telegramService.send("subscribeTelegramUpdate", { chatId: chatId })
             }
 
-            if (text.includes("/subscribemail")) {
-                const eventService = await cds.connect.to("MailService")
-
-                const parts = text.split(" ");
-
-                if (parts.length !== 2) {
-                    res.sendStatus(200);
-                } else {
-
-                    eventService.send("sendMail", {
-                        to: parts[1],
-                        subject: "Event Update",
-                        text: "Das Event wurde aktualisiert."
-                    })
-                }
+            if (text === "/getticketlink") {
+                const telegramService = await cds.connect.to("TelegramService")
+                telegramService.send("getTicketLink", { chatId: chatId })
             }
+
+            if (text === "/subscribemail") {
+                const telegramService = await cds.connect.to("TelegramService")
+                telegramService.send("subscribeEmail", {
+                    chatId: chatId
+                })
+            }
+
+            if (update.message.entities[0].type === "email") {
+                const telegramService = await cds.connect.to("TelegramService")
+                telegramService.send("updateEmail", { chatId: chatId, email: text })
+            }
+
 
 
 
