@@ -1,14 +1,17 @@
 {
   "name": "ticketbot",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
     "@google/genai": "^2.22.0",
     "@sap/cds": "^10",
     "nodemailer": "^10.0.9"
   },
   "devDependencies": {
+    "@cap-js/cds-test": "^1.0.2",
     "@cap-js/sqlite": "^3",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "vitest": "^5.0.1"
   },
   "scripts": {
     "start": "cds-serve",
@@ -25,6 +28,15 @@
       },
       "messaging": {
         "kind": "local-messaging"
+      },
+      "[test]": {
+        "queue": false,
+        "db": {
+          "kind": "sqlite",
+          "credentials": {
+            "url": ":memory:"
+          }
+        }
       }
     }
   }

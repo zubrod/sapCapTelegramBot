@@ -1,9 +1,10 @@
 // srv/server.js
-const cds = require('@sap/cds');
+import cds from "@sap/cds"
+import express from "express"
 
 cds.on('bootstrap', (app) => {
     // app ist die zugrunde liegende Express-App
-    app.post('/subscribe', require('express').json(), async (req, res) => {
+    app.post('/subscribe', express.json(), async (req, res) => {
         const update = req.body;
 
         if (update.message) {
@@ -67,4 +68,4 @@ cds.on('bootstrap', (app) => {
     });
 });
 
-module.exports = cds.server; // wichtig: Standard-CAP-Server weiterlaufen lassen!
+export default cds.server; // wichtig: Standard-CAP-Server weiterlaufen lassen!

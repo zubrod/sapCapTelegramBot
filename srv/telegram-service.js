@@ -15,7 +15,7 @@ export class TelegramService extends cds.ApplicationService {
         this.setWebhook()
 
         this.on("processTextbyAI", async (req) => {
-            const chatId = req.data.chatId.toString()
+            const chatId = req.data.chatId
             const text = req.data.text
 
 
@@ -31,7 +31,7 @@ export class TelegramService extends cds.ApplicationService {
         })
 
         this.on("updateEmail", async (req) => {
-            const chatId = req.data.chatId.toString()
+            const chatId = req.data.chatId
             const email = req.data.email
 
 
@@ -46,7 +46,7 @@ export class TelegramService extends cds.ApplicationService {
         })
 
         this.on("subscribeEmail", async (req) => {
-            const chatId = req.data.chatId.toString()
+            const chatId = req.data.chatId
 
 
             const user = await SELECT.one.from("TelegramUsers").where({ chatId: chatId })
@@ -60,20 +60,20 @@ export class TelegramService extends cds.ApplicationService {
         })
 
         this.on("unsubscribeEmail", async (req) => {
-            const chatId = req.data.chatId.toString()
+            const chatId = req.data.chatId
 
 
             const user = await SELECT.one.from("TelegramUsers").where({ chatId: chatId })
 
             if (user.emailSubscribed) {
-                await UPDATE.entity("TelegramUsers").set({ emailSubscribed: false, email: "" }).where({ chatId: chatId })
+                await UPDATE.entity("TelegramUsers").set({ emailSubscribed: false, email: null }).where({ chatId: chatId })
                 await this.sendMessageToUser(user, "Sie bekommen keine Emails mehr");
             }
 
         })
 
         this.on("subscribeTelegramUpdate", async (req) => {
-            const chatId = req.data.chatId.toString()
+            const chatId = req.data.chatId
 
             const user = await SELECT.one.from("TelegramUsers").where({ chatId: chatId })
 
@@ -91,7 +91,9 @@ export class TelegramService extends cds.ApplicationService {
 
             const chatId = req.data.chatId
 
-            const user = await SELECT.one.from("TelegramUsers").where({ chatId: chatId.toString() })
+            const user = await SELECT.one.from("TelegramUsers").where({
+                chatId: chatId
+            })
 
             let events = await SELECT.one.from("Events") || [];
 
@@ -122,8 +124,6 @@ export class TelegramService extends cds.ApplicationService {
 
         const messaging = await cds.connect.to("messaging");
         messaging.on("soldTicketsUpdated", async msg => {
-
-            const totalTickets = msg.data.total_tickets;
             await this.send("sendUpdate")
         })
 

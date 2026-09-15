@@ -12,7 +12,7 @@ entity Events {
 
 
 entity TelegramUsers {
-    key chatId             : String(100) @assert.unique;
+    key chatId             : Integer @assert.unique;
         email              : String(100);
         telegramSubscribed : Boolean default false;
         emailSubscribed    : Boolean default false;
