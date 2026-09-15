@@ -6,14 +6,16 @@ service TelegramService {
     entity TelegramUsers as projection on db.TelegramUsers;
 
     function sendUpdate()                           returns Boolean;
-    function sendSingleUpdate(chatId: Integer)      returns Boolean;
 
     action   subscribeTelegramUser(chatId: Integer) returns Boolean;
 
     action   updateEmail(chatId: Integer, email: String);
 
     action   subscribeEmail(chatId: Integer);
+    action   unsubscribeEmail(chatId: Integer);
     action   subscribeTelegramUpdate(chatId: Integer);
+
+    action   processTextbyAI(chatId: Integer, text: String);
 
     action   getTicketLink(chatId: Integer);
 

@@ -1,4 +1,5 @@
 import cds from '@sap/cds';
+import Gemini from './handler/gemini.js';
 
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -13,6 +14,22 @@ export class TelegramService extends cds.ApplicationService {
 
         this.setWebhook()
 
+        this.on("processTextbyAI", async (req) => {
+            const chatId = req.data.chatId.toString()
+            const text = req.data.text
+
+
+            const user = await SELECT.one.from("TelegramUsers").where({ chatId: chatId })
+
+            const ai = new Gemini();
+
+            const response = await ai.process(text)
+
+            await this.sendMessageToUser(user, response);
+
+
+        })
+
         this.on("updateEmail", async (req) => {
             const chatId = req.data.chatId.toString()
             const email = req.data.email
@@ -22,6 +39,8 @@ export class TelegramService extends cds.ApplicationService {
 
             if (user.emailSubscribed && !user.email) {
                 await UPDATE.entity("TelegramUsers").set({ email: email }).where({ chatId: chatId })
+                await this.sendMessageToUser(user, "Email Adresse geupdatet");
+
             }
 
         })
@@ -34,6 +53,21 @@ export class TelegramService extends cds.ApplicationService {
 
             if (!user.emailSubscribed) {
                 await UPDATE.entity("TelegramUsers").set({ emailSubscribed: true }).where({ chatId: chatId })
+                await this.sendMessageToUser(user, "Geben Sie jetzt ihre Email Adresse ein. Nichts weiter");
+
+            }
+
+        })
+
+        this.on("unsubscribeEmail", async (req) => {
+            const chatId = req.data.chatId.toString()
+
+
+            const user = await SELECT.one.from("TelegramUsers").where({ chatId: chatId })
+
+            if (user.emailSubscribed) {
+                await UPDATE.entity("TelegramUsers").set({ emailSubscribed: false, email: "" }).where({ chatId: chatId })
+                await this.sendMessageToUser(user, "Sie bekommen keine Emails mehr");
             }
 
         })
@@ -46,6 +80,8 @@ export class TelegramService extends cds.ApplicationService {
 
             if (!user.telegramSubscribed) {
                 await UPDATE.entity("TelegramUsers").set({ telegramSubscribed: true }).where({ chatId: chatId })
+                await this.sendMessageToUser(user, "Updates sind nun eingeschaltet");
+
             }
         })
 
@@ -59,23 +95,9 @@ export class TelegramService extends cds.ApplicationService {
 
             let events = await SELECT.one.from("Events") || [];
 
-            this.sendSingleUpdateToUser(user.chatId, events.shop_link)
+            this.sendMessageToUser(user, events.shop_link)
         })
 
-        this.on("sendSingleUpdate", async (req) => {
-
-            const chatId = req.data.chatId
-
-            const user = await SELECT.one.from("TelegramUsers").where({ chatId: chatId.toString() })
-
-            if (!user) {
-                return;
-            }
-
-            let events = await SELECT.one.from("Events") || [];
-
-            await this.sendSingleUpdateToUser(user.chatId, this.getFormattedMessage(events.total_tickets))
-        })
 
         this.on("sendUpdate", async (req) => {
 
@@ -85,7 +107,7 @@ export class TelegramService extends cds.ApplicationService {
 
             for (const user of users) {
                 if (user.telegramSubscribed) {
-                    await this.sendSingleUpdateToUser(user, this.getFormattedMessage(events.total_tickets))
+                    await this.sendMessageToUser(user, this.getFormattedMessage(events.total_tickets))
                 }
 
                 if (user.emailSubscribed) {
@@ -116,11 +138,6 @@ export class TelegramService extends cds.ApplicationService {
         }
         const result = await UPSERT.into("TelegramUsers").entries({ chatId: chatId })
 
-        if (result === 1) {
-            const queue = cds.queued(this)
-            await queue.send("sendSingleUpdate", { chatId: chatId });
-        }
-
         return true;
 
     }
@@ -150,7 +167,7 @@ export class TelegramService extends cds.ApplicationService {
         mailService.send("sendMail", { to: user.email, subject: "Ticket Update", text: msg })
     }
 
-    async sendSingleUpdateToUser(user, msg) {
+    async sendMessageToUser(user, msg) {
         return await fetch(
             TELEGRAM_API_URL + "sendMessage",
             {
