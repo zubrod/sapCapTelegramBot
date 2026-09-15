@@ -52,4 +52,30 @@ describe('Test telegram bot operations', () => {
         expect(user[0].emailSubscribed).to.equal(false)
     })
 
+    it('should subscribe to telegram updates', async () => {
+        //arrange
+
+        //act
+        const result = await POST("/telegram/subscribeTelegramUpdate", { chatId: 123 })
+
+        //assert
+        const user = await SELECT.one.from("TelegramUsers").where({ chatId: 123 });
+
+        expect(result.status).to.equal(204);
+        expect(user.telegramSubscribed).to.equal(true)
+    })
+
+    it('should unsubscribe from telegram updates', async () => {
+        //arrange
+
+        //act
+        const result = await POST("/telegram/subscribeTelegramUpdate", { chatId: 123 })
+
+        //assert
+        const user = await SELECT.one.from("TelegramUsers").where({ chatId: 123 });
+
+        expect(result.status).to.equal(204);
+        expect(user.telegramSubscribed).to.equal(true)
+    })
+
 })
